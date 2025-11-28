@@ -1,0 +1,39 @@
+
+steps:
+# Step 1: Build Docker image
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    [
+      'build',
+      '-t',
+      'us-docker.pkg.dev/$PROJECT_ID/imgwebapp/imgwebapp:v1',
+      '.'
+    ]
+  timeout: 180s
+
+# Step 2: Push Docker image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args:
+    [
+      'push',
+      'us-docker.pkg.dev/$PROJECT_ID/imgwebapp/imgwebapp:v1'
+    ]
+
+# Step 3: Debug / confirm build
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+    [
+      '-c',
+      'echo "Docker Container Built"; ls -la; ls -al models/'
+    ]
+
+# Step 4: Deploy to GKE
+- name: 'gcr.io/cloud-builders/gke-deploy'
+  args:
+    [
+      'run',
+      '--filename=k8s/',
+      '--location=us-central1-a',
+      '--cluster=project-image'
+    ]
